@@ -53,6 +53,97 @@ void get_robots(char* file, robot* robots, int nb_robots){
 
 }
 
+void create_map(mars_map* mars){
+    const double p_obstacles = 0.4; // the map is distributed 0.6 free space and 0.4 obstacles
+    int nb_obstacles = (int)mars->nb_cols*mars->nb_rows*p_obstacles;
+
+    // creating the map
+	mars->map_ = (int **)malloc(mars->nb_rows*sizeof(int *));
+	for (int i=0; i< mars->nb_rows; i++){
+        mars->map_[i] = (int *)malloc(mars->nb_cols*sizeof(int));
+	}
+    //fill the map with empty space
+    for (int i=0; i<mars->nb_rows;i++){
+        for(int j=0; j<mars->nb_cols;j++){
+            mars->map_[i][j]=0;
+        }
+    }
+    // add obstacles
+    int obstacle_spawn;
+    for (int i=0; i<nb_obstacles ;i++){
+        obstacle_spawn=rand()%(mars->nb_cols*mars->nb_rows);
+        mars->map_[obstacle_spawn/mars->nb_cols][obstacle_spawn%mars->nb_cols]=1;
+    }
+
+}
+
+void spawn_robots (mars_map* mars, robot* robots){
+    for (int i=0; i< mars->nb_robots ; i++){
+        mars->map_[robots[i].pos_x][robots[i].pos_y]= get_robot_orientation(robots[i].direction);
+    }
+}
+
+int get_robot_orientation (enum direction dir){
+    switch(dir){
+        case NORTH :
+            return 2;
+        case EAST :
+            return 3;
+        case SOUTH :
+            return 4;
+        case WEST :
+            return 5;
+        default :
+            return -1;
+    }
+}
+
+void display_map(mars_map mars){
+    clearScreen();
+    for (int i=0; i< mars.nb_cols; i++){
+        printf("=");
+    }
+    printf("\n");
+    for (int i=0; i<mars.nb_rows; i++){
+        for (int j=0; j<mars.nb_cols; j++){
+            printf("%c",get_printed_character(mars.map_[i][j]));
+
+        }
+        printf("\n");
+
+    }
+    for (int i=0; i< mars.nb_cols; i++){
+        printf("=");
+    }
+    printf("\n");
+}
+
+void clearScreen()
+{
+    int n;
+    for (n = 0; n < 10; n++)
+        printf( "\n\n\n\n\n\n\n\n\n\n" );
+}
+
+char get_printed_character(int box){
+    switch(box){
+        case 0:
+            return ' ';
+        case 1:
+            return '#';
+        case 2:
+            return '^';
+        case 3:
+            return '>';
+        case 4:
+            return 'v';
+        case 5:
+            return '<';
+        default:
+            return ' ';
+    }
+}
+
 enum direction find_direction(char dir)
 {
     switch(dir){
@@ -65,6 +156,6 @@ enum direction find_direction(char dir)
         case 'W':
             return WEST;
         default :
-            break;
+            return -1;
     }
 }

@@ -21,3 +21,9 @@ typedef struct{
 void read_map(char *file, mars_map* mars );
 void get_robots(char* file, robot* robots, int nb_robots);
 enum direction find_direction(char dir);
+void create_map(mars_map* mars);
+void spawn_robots (mars_map* mars, robot* robots);
+int get_robot_orientation (enum direction dir);
+void display_map(mars_map mars);
+char get_printed_character(int box);
+void clearScreen();
