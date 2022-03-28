@@ -9,6 +9,7 @@ typedef struct{
     enum direction direction;
     char commande[100];
     int step;
+    int onhold; // waiting for another robot to move
 }robot;
 
 typedef struct{
@@ -27,3 +28,8 @@ int get_robot_orientation (enum direction dir);
 void display_map(mars_map mars);
 char get_printed_character(int box);
 void clearScreen();
+
+int move_robot(mars_map* mars, robot* robot);
+void turn_robot(mars_map* mars, robot* robot, char next_step);
+void step_robot(mars_map* mars, robot* robot, char next_step);
+int validate_pos(mars_map* mars,int new_x,int new_y);
