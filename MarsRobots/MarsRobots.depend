@@ -1,12 +1,13 @@
 # depslib dependency file v1.0
-1648508283 source:/home/mahdi/Documents/ISN2A/C_programming/MarsRobots/MarsRobots/utils.c
+1650033252 source:/home/mahdi/Documents/ISN2A/C_programming/MarsRobots/MarsRobots/utils.c
 	"robot.h"
 
-1648508002 /home/mahdi/Documents/ISN2A/C_programming/MarsRobots/MarsRobots/robot.h
+1650035751 /home/mahdi/Documents/ISN2A/C_programming/MarsRobots/MarsRobots/robot.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
+	<pthread.h>
 
-1648500319 source:/home/mahdi/Documents/ISN2A/C_programming/MarsRobots/MarsRobots/main.c
+1650035894 source:/home/mahdi/Documents/ISN2A/C_programming/MarsRobots/MarsRobots/main.c
 	"robot.h"
 

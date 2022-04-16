@@ -198,6 +198,10 @@ enum direction find_direction(char dir)
     }
 }
 
+/*
+* @brief: main function that moves the robot
+*/
+
 int move_robot(mars_map* mars, robot* robot)
 {
     if(strlen(robot->commande)<=robot->step)
@@ -209,6 +213,10 @@ int move_robot(mars_map* mars, robot* robot)
         step_robot(mars, robot, next_step);
     return 1;
 }
+
+/*
+* @brief: function called by move_robot used to turn the robot
+*/
 
 void turn_robot(mars_map* mars, robot* robot, char next_step)
 {
@@ -231,8 +239,14 @@ void turn_robot(mars_map* mars, robot* robot, char next_step)
     mars->map_[robot->pos_y][robot->pos_x]= get_robot_orientation(robot->direction);
 }
 
+// delta_xy helps us figure out the next move of the robot depending on its current orientation
 int delta_xy[4][2] = {{0,1},{1,0},{0,-1},{-1,0}};
 
+/*
+* @brief : this function is called by move robot and is used to step the robot from one spot to another
+*          the main difference in this function is that the robot waits in case the spot is held by
+           another robot
+*/
 void step_robot(mars_map* mars, robot* robot, char next_step)
 {
     int new_x=robot->pos_x, new_y=robot->pos_y;
@@ -288,6 +302,58 @@ int validate_pos(mars_map* mars,int new_x,int new_y){
     if(spot_on_map==1)
         return(0);
     return 2;
+}
+
+/*
+* @brief: main function that moves the robot in concurrent fashion
+*/
+
+int workToDo =0; // display_map has no work to do
+//mars_map* mars, robot* robot,pthread_mutex_t* dmutex, pthread_cond_t* condition
+void *move_robot_conc(void *arg)
+{
+    printf("thread created");
+    thread_data *mine= (thread_data*) arg;
+    while(1){
+        pthread_mutex_t* dmutex = mine->dmutex;
+        pthread_cond_t * condition = mine->condition;
+
+        pthread_mutex_lock(dmutex);
+        while(workToDo==1){
+            pthread_cond_wait(condition,dmutex);
+        }
+        mars_map* mars= mine->mars;
+        robot* robot = mine->pou;
+        int finish_line = move_robot(mars,robot);
+        workToDo =1;
+        pthread_cond_broadcast(condition);
+        pthread_mutex_unlock(dmutex);
+        if (finish_line==0)
+            pthread_exit(NULL);
+        sleep(1);
+    }
+}
+
+/*
+//@brief : function that displays the map, obstacles and robots in a concurrent fashion
+*/
+
+void *display_map_conc(void *arg){
+    thread_data *mine= (thread_data*) arg;
+    while(1){
+        pthread_mutex_t* dmutex = mine->dmutex;
+        pthread_cond_t * condition = mine->condition;
+        pthread_mutex_lock(dmutex);
+        while(workToDo==0){
+            pthread_cond_wait(condition,dmutex);
+        }
+        mars_map* mars = mine->mars;
+        display_map(*mars);
+        workToDo=0;
+        pthread_cond_broadcast(condition);
+        pthread_mutex_unlock(dmutex);
+        //sleep(1);
+    }
 }
 
 

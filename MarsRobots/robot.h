@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+
 
 enum direction {NORTH,EAST,SOUTH,WEST};
 typedef struct{
@@ -19,6 +21,13 @@ typedef struct{
     int nb_robots;
 }mars_map;
 
+typedef struct{
+    mars_map*        mars;
+    robot*           pou;
+    pthread_mutex_t* dmutex;
+    pthread_cond_t*  condition;
+}thread_data;
+
 void read_map(char *file, mars_map* mars );
 void get_robots(char* file, robot* robots, int nb_robots);
 enum direction find_direction(char dir);
@@ -33,3 +42,6 @@ int move_robot(mars_map* mars, robot* robot);
 void turn_robot(mars_map* mars, robot* robot, char next_step);
 void step_robot(mars_map* mars, robot* robot, char next_step);
 int validate_pos(mars_map* mars,int new_x,int new_y);
+
+void* move_robot_conc(void *arg);
+void* display_map_conc(void *arg);
