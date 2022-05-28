@@ -35,6 +35,7 @@ enum direction find_direction(char dir);
 void create_map(mars_map* mars);
 void spawn_robots (mars_map* mars, robot* robots);
 int get_robot_orientation (enum direction dir);
+char print_direction(enum direction dir);
 void display_map(mars_map mars);
 char get_printed_character(int box);
 void clearScreen();
@@ -46,3 +47,5 @@ int validate_pos(mars_map* mars,int new_x,int new_y);
 
 void* move_robot_conc(void *arg);
 void* display_map_conc(void *arg);
+
+int menu();

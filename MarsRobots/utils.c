@@ -202,6 +202,25 @@ enum direction find_direction(char dir)
 }
 
 /*
+//@brief: helper function for printing robot's position
+*/
+char print_direction(enum direction dir)
+{
+    switch(dir){
+        case NORTH:
+            return 'N';
+        case EAST:
+            return 'E';
+        case SOUTH:
+            return 'S';
+        case WEST:
+            return 'W';
+        default :
+            return -1;
+    }
+}
+
+/*
 * @brief: main function that moves the robot
 */
 
@@ -285,6 +304,10 @@ void step_robot(mars_map* mars, robot* robot, char next_step)
             robot->onhold=0;
         }else
             robot->onhold=1;
+    }else if(validation_flag==3){ //spot outside the map
+    	turn_robot(mars, robot, 'L');
+    	turn_robot(mars, robot, 'L');
+    	robot->step--;
     }else
         robot->step++;
 }
@@ -294,11 +317,12 @@ void step_robot(mars_map* mars, robot* robot, char next_step)
 //@returns : 0 if there is an obstacle
 //           1 if position is free
 //           2 if position is held by another robot
+//	     3 if position is outside the map
 */
 
 int validate_pos(mars_map* mars,int new_x,int new_y){
     if(new_x<0||new_x>=mars->nb_cols||new_y<0||new_y>=mars->nb_rows)
-        return 0;
+        return 3;
     int spot_on_map=mars->map_[new_y][new_x];
     if(spot_on_map==0)
         return(1);
@@ -362,6 +386,22 @@ void *display_map_conc(void *arg){
         }
         //sleep(1);
     }
+}
+
+/*
+//@brief : function that specifies which mode we run our program on
+*/
+int menu(){
+    printf("please be a dear and choose one of these following versions you want to run the program at\n");
+    printf("1) Sequential movement of robots \n");
+    printf("2) Concurrent movement of robots \n");
+    printf("3) Server Client communication for robot movement control \n");
+    int choice=0;
+    while (choice<1 || choice >2){
+        printf("enter your choice : ");
+        scanf("%d", &choice);
+    }
+    return (choice);
 }
 
 
