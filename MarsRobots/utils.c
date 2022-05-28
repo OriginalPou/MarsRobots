@@ -22,6 +22,9 @@ void read_map(char *file, mars_map* mars ) {
 		mars->nb_robots++;
 	}
 
+	//get number of robots still moving
+    mars->nb_robots_moving=mars->nb_robots;
+
     //get nb of cols and rows
     f = fopen(file,"r");
     fgets(str,sizeof(str),f);
@@ -328,8 +331,10 @@ void *move_robot_conc(void *arg)
         workToDo =1;
         pthread_cond_broadcast(condition);
         pthread_mutex_unlock(dmutex);
-        if (finish_line==0)
+        if (finish_line==0){
+            mars->nb_robots_moving--;
             pthread_exit(NULL);
+        }
         sleep(1);
     }
 }
@@ -352,6 +357,9 @@ void *display_map_conc(void *arg){
         workToDo=0;
         pthread_cond_broadcast(condition);
         pthread_mutex_unlock(dmutex);
+        if(mars->nb_robots_moving==0){
+            pthread_exit(NULL);
+        }
         //sleep(1);
     }
 }

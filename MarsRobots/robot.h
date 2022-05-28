@@ -19,6 +19,7 @@ typedef struct{
     int nb_rows;
     int nb_cols;
     int nb_robots;
+    int nb_robots_moving;
 }mars_map;
 
 typedef struct{
