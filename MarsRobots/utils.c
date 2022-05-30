@@ -397,11 +397,35 @@ int menu(){
     printf("2) Concurrent movement of robots \n");
     printf("3) Server Client communication for robot movement control \n");
     int choice=0;
-    while (choice<1 || choice >2){
+    while (choice<1 || choice >3){
         printf("enter your choice : ");
         scanf("%d", &choice);
     }
     return (choice);
+}
+
+/*
+//@brief : function that prints the initial map and robot parameters
+*/
+void printInitial(mars_map mars, robot* robots){
+    display_map(mars);
+    printf("Map's height : %d Map's width : %d\n",mars.nb_rows,mars.nb_cols) ;
+    for(int i=0; i<mars.nb_robots;i++){
+        robot pou=robots[i];
+        printf("Robot's position : %d %d %c\nCommand : %s number of steps : %ld\n", pou.pos_x, pou.pos_y, print_direction(pou.direction), pou.commande, strlen(pou.commande));
+    }
+    for(int32_t i=0; i<0x2FFFFFFF;i++);//delay
+}
+
+/*
+//@brief : function that prints final Robot positions
+*/
+void printFinal(mars_map mars, robot* robots){
+    printf("Final positions :\n") ;
+    for(int i=0; i<mars.nb_robots;i++){
+        robot pou=robots[i];
+        printf("\tRobot nb %d's position : %d %d %c\n",i,pou.pos_x,pou.pos_y,print_direction(pou.direction));
+    }
 }
 
 

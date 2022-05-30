@@ -1,11 +1,42 @@
 #include "robot.h"
+
 pthread_mutex_t dmutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  condition   = PTHREAD_COND_INITIALIZER;
 
 int main()
 {
-    srand(time(NULL));
     int choice = menu();
+    
+    //Server Client Communication
+    if (choice ==3){
+    	
+    	// Setting up server's side of the communication
+	char msg[40];
+	serverSocket sock;
+	setUpServer(&sock);
+	
+	//synchronization
+	printf("Waiting for synchronization\n");
+	waitForSync(msg, sock.s, 40, (struct sockaddr *)sock.p_exp);
+	
+	//receive maps parameters
+	mars_map mars;
+	getMapParams(msg, sock.s, 40, (struct sockaddr *)sock.p_exp, &mars);
+	
+	//receive robot parameters
+	robot robots[mars.nb_robots];
+	getRobotParams(msg, sock.s, 40, (struct sockaddr *)sock.p_exp, robots, mars.nb_robots);
+	create_map(&mars);
+    	spawn_robots (&mars, robots);
+	printInitial(mars, robots);
+	
+	moveRobotServer (&sock, robots, &mars, &dmutex, &condition);
+	printFinal(mars,robots);
+    	return 1;
+    }
+    
+    //sequential OR concurrent
+    srand(time(NULL));
     mars_map mars;
     read_map("map1.txt", &mars );
     robot robots[mars.nb_robots];
@@ -14,13 +45,7 @@ int main()
     spawn_robots (&mars, robots);
 
     // print initial positions
-    display_map(mars);
-    printf("Map's height : %d Map's width : %d\n",mars.nb_rows,mars.nb_cols) ;
-    for(int i=0; i<mars.nb_robots;i++){
-        robot pou=robots[i];
-        printf("Robot's position : %d %d %c\nCommand : %s number of steps : %d\n",pou.pos_x,pou.pos_y,print_direction(pou.direction),pou.commande,strlen(pou.commande));
-    }
-    for(int32_t i=0; i<0x2FFFFFFF;i++);//delay
+    printInitial(mars, robots);
 
     //concurrent
     if (choice ==2){
