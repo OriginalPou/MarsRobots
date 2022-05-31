@@ -12,6 +12,7 @@ int main()
     	
     	// Setting up server's side of the communication
 	char msg[40];
+	int bd;
 	serverSocket sock;
 	setUpServer(&sock);
 	
@@ -25,13 +26,24 @@ int main()
 	
 	//receive robot parameters
 	robot robots[mars.nb_robots];
-	getRobotParams(msg, sock.s, 40, (struct sockaddr *)sock.p_exp, robots, mars.nb_robots);
+	getRobotParams(msg, sock.s, 40, (struct sockaddr *)sock.p_exp, robots, &mars, mars.nb_robots,1);
 	create_map(&mars);
     	spawn_robots (&mars, robots);
-	printInitial(mars, robots);
 	
-	moveRobotServer (&sock, robots, &mars, &dmutex, &condition);
-	printFinal(mars,robots);
+	//move the robots in concurrent fashion
+	while (1){
+		printInitial(mars, robots);
+		moveRobotServer (&sock, robots, &mars, &dmutex, &condition);
+		printFinal(mars,robots);
+		// receive new commands from client
+		printf("Waiting for client's new commands\n");
+		bd = recvfrom(sock.s,msg,40,0,(struct sockaddr *)sock.p_exp, (socklen_t*)sizeof(struct sockaddr_in));
+		if (msg[0]=='N'){
+			printf("No new commands, server sleeping\n");
+			break;
+		}
+		getRobotParams(msg, sock.s, 40, (struct sockaddr *)sock.p_exp, robots, &mars, mars.nb_robots,2);
+	}
     	return 1;
     }
     

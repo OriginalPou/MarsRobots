@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h> 
 #include <pthread.h>
 
 #include<sys/types.h>
@@ -90,8 +91,8 @@ void synchronize(int s,char* msg, int lg,const struct sockaddr* padin);
 void waitForSync(char* message, int s, int lg, struct sockaddr * p_exp);
 void getMapParams(char* message, int s, int lg, struct sockaddr * p_exp, mars_map* map);
 void setMapParams(int s,char* msg, int lg,const struct sockaddr* padin, mars_map* mars);
-void getRobotParams(char* message, int s, int lg, struct sockaddr * p_exp, robot* robots, int nb_robots);
-void setRobotParams(int s,char* msg, int lg,const struct sockaddr* padin,robot* robots, mars_map mars);
+void getRobotParams(char* message, int s, int lg, struct sockaddr * p_exp, robot* robots, mars_map* mars, int nb_robots, int mode);
+void setRobotParams(int s,char* msg, int lg,const struct sockaddr* padin,robot* robots, mars_map mars, int mode);
 int commandValid(char* command);
 void followRobots(int s,char* msg, int lg,const struct sockaddr* padin,robot* robots, mars_map* mars);
 void moveRobotServer (serverSocket* sock, robot* robots, mars_map* mars, pthread_mutex_t* dmutex, pthread_cond_t*  condition);

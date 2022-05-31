@@ -29,7 +29,6 @@ void read_map(char *file, mars_map* mars ) {
     f = fopen(file,"r");
     fgets(str,sizeof(str),f);
     sscanf(str, "%d %d",&mars->nb_rows,&mars->nb_cols);
-
     fclose(f);
 }
 
@@ -413,6 +412,7 @@ void printInitial(mars_map mars, robot* robots){
     for(int i=0; i<mars.nb_robots;i++){
         robot pou=robots[i];
         printf("Robot's position : %d %d %c\nCommand : %s number of steps : %ld\n", pou.pos_x, pou.pos_y, print_direction(pou.direction), pou.commande, strlen(pou.commande));
+        printf("Robot is on step : %d\n", pou.step);
     }
     for(int32_t i=0; i<0x2FFFFFFF;i++);//delay
 }

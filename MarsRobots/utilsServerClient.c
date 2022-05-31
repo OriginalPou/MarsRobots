@@ -1,5 +1,8 @@
 #include "robot.h"
 
+/*
+* @brief: this function sets up the communication from the server's side
+*/
 void setUpServer(serverSocket* sock){
 	int errno =40;
 	sock->s= socket(AF_INET, SOCK_DGRAM, AF_UNSPEC);
@@ -30,6 +33,9 @@ void setUpServer(serverSocket* sock){
 	printf("Communication Set up from Server's side\n");
 }
 
+/*
+* @brief: this function sets up the communication from the client's side
+*/
 void setUpClientCom(clientSocket* sock){
 	int s, errno;
 	struct hostent *host;
@@ -65,6 +71,9 @@ void setUpClientCom(clientSocket* sock){
     	printf("Communication set up from client's side\n");
 }
 
+/*
+* @brief: this function allows the client to set the different parameters of the map
+*/
 void setMapParams(int s,char* msg, int lg,const struct sockaddr* padin, mars_map* mars){
 	int choice;
 	printf("It's time to enter the maps' different parameters\n");
@@ -124,6 +133,9 @@ void setMapParams(int s,char* msg, int lg,const struct sockaddr* padin, mars_map
 	printf("Number of robots sent\n");	
 }
 
+/*
+* @brief: this functions helps the server receive the different map parameters and store them locally
+*/
 void getMapParams(char* message, int s, int lg, struct sockaddr * p_exp, mars_map* mars){
 	socklen_t p_lgexp = sizeof(struct sockaddr_in);
 	int choice;
@@ -152,111 +164,125 @@ void getMapParams(char* message, int s, int lg, struct sockaddr * p_exp, mars_ma
 	printf("number of robots received equals : %d\n", choice);
 	//setting local map's height
 	mars->nb_robots=choice;
-	mars->nb_robots_moving=mars->nb_robots;
 }
 
-void getRobotParams(char* message, int s, int lg, struct sockaddr * p_exp, robot* robots, int nb_robots){
+/*
+* @brief: this function allows the server to receive the different parameters of the robots and store them locally
+*/
+void getRobotParams(char* message, int s, int lg, struct sockaddr * p_exp, robot* robots,mars_map* mars, int nb_robots, int mode){
 	socklen_t p_lgexp = sizeof(struct sockaddr_in);
 	int choice;
 	printf("It's time to receive the robots' different parameters\n");
 	for(int i=0; i<nb_robots;i++){
 		robot pou;
 		printf("Robot number %d\n",i);
-		
-		printf("Waiting for robot's x-axis pos\n");
-		int bd = recvfrom(s,message,lg,0,p_exp, &p_lgexp);
-		choice = atoi(message);
-		printf("Robot's x-axis pos equals : %d\n", choice);
-		//setting local robot x-axis pos
-		pou.pos_x=choice;
-		
-		printf("Waiting for robot's y-axis pos\n");
-		bd = recvfrom(s,message,lg,0,p_exp, &p_lgexp);
-		choice = atoi(message);
-		printf("Robot's y-axis pos equals : %d\n", choice);
-		//setting local robot y-axis pos
-		pou.pos_y=choice;
-		
-		printf("Waiting for robot's direction\n");
-		bd = recvfrom(s,message,1,0,p_exp, &p_lgexp);
-		printf("Robot's direction equals : %c\n", message[0]);
-		//setting local robot direction
-		pou.direction=find_direction(message[0]);
+		if (mode==1){
+			printf("Waiting for robot's x-axis pos\n");
+			int bd = recvfrom(s,message,lg,0,p_exp, &p_lgexp);
+			choice = atoi(message);
+			printf("Robot's x-axis pos equals : %d\n", choice);
+			//setting local robot x-axis pos
+			pou.pos_x=choice;
+			
+			printf("Waiting for robot's y-axis pos\n");
+			bd = recvfrom(s,message,lg,0,p_exp, &p_lgexp);
+			choice = atoi(message);
+			printf("Robot's y-axis pos equals : %d\n", choice);
+			//setting local robot y-axis pos
+			pou.pos_y=choice;
+			
+			printf("Waiting for robot's direction\n");
+			bd = recvfrom(s,message,1,0,p_exp, &p_lgexp);
+			printf("Robot's direction equals : %c\n", message[0]);
+			//setting local robot direction
+			pou.direction=find_direction(message[0]);
+		}else
+			pou=robots[i];
 		
 		printf("Waiting for robot's command\n");
 		//setting local robot command
-		bd = recvfrom(s,pou.commande,100,0,p_exp, &p_lgexp);
+		int bd = recvfrom(s,pou.commande,100,0,p_exp, &p_lgexp);
 		printf("Robot's command equals : %s\n", pou.commande);
 		
 		pou.step=0;// set the robot's position to 0
         	pou.onhold=0; // set the onhold flag to 0
 		robots[i]=pou;
+		mars->nb_robots_moving=mars->nb_robots;
 	}
 	//printf("%s",robots[0].commande);
 	//int bd = sendto(s, robots[0].commande, strlen(robots[0].commande), 0, p_exp, sizeof(struct sockaddr_in));
 }
 
-void setRobotParams(int s,char* msg, int lg,const struct sockaddr* padin,robot* robots, mars_map mars){
+/*
+* @brief: this function allows the client to set the different parameters of the robots
+*/
+void setRobotParams(int s,char* msg, int lg,const struct sockaddr* padin,robot* robots, mars_map mars, int mode){
 	int choice;
 	char dir;
 	printf("It's time to enter the robots' parameters\n");
 	for(int i=0; i<mars.nb_robots;i++){
 		robot pou;
 		printf("Robot number %d\n",i);
-		
-		//*******
-		printf("Please enter robot's x-axis pos\n");
-		do{
-			printf("Enter a value from 0 to %d :",mars.nb_cols);
-			scanf("%d",&choice);
-		}while(!(choice>=0 & choice<mars.nb_cols));
-		
-		sprintf(msg,"%d",choice);
-		int bd = sendto(s,msg,lg,0,padin,sizeof(*padin));
-		if(bd == -1)
+		if (mode== 1) //we're starting out
 		{
-			printf("Erreur send \n");
-			exit(-1);
+			//*******
+			printf("Please enter robot's x-axis pos\n");
+			do{
+				printf("Enter a value from 0 to %d :",mars.nb_cols);
+				scanf("%d",&choice);
+			}while(!(choice>=0 & choice<mars.nb_cols));
+			
+			sprintf(msg,"%d",choice);
+			int bd = sendto(s,msg,lg,0,padin,sizeof(*padin));
+			if(bd == -1)
+			{
+				printf("Erreur send \n");
+				exit(-1);
+			}
+			printf("robot's x-axis pos sent\n");
+			//setting up local robot parmas
+			pou.pos_x=choice;
+			
+			//*******
+			printf("Please enter robot's y-axis pos\n");
+			do{
+				printf("Enter a value from 0 to %d :",mars.nb_rows);
+				scanf("%d",&choice);
+			}while(!(choice>=0 & choice<mars.nb_rows));
+			
+			sprintf(msg,"%d",choice);
+			bd = sendto(s,msg,lg,0,padin,sizeof(*padin));
+			if(bd == -1)
+			{
+				printf("Erreur send \n");
+				exit(-1);
+			}
+			printf("robot's y-axis pos sent\n");
+			//setting up local robot parmas
+			pou.pos_y=choice;
+			
+			//*******
+			printf("Please enter robot's direction\n");
+			do{
+				printf("Enter the robot's direction 'N', 'S', 'E' or 'W' ");
+				scanf("%1s",&dir);
+			}while(!(dir=='N'||dir=='S'||dir=='E'||dir=='W'));
+					
+			bd = sendto(s,&dir,1,0,padin,sizeof(*padin));
+			if(bd == -1)
+			{
+				printf("Erreur send \n");
+				exit(-1);
+			}
+			printf("robot's direction sent\n");
+			//setting up local robot parmas
+			pou.direction=find_direction(dir);
+		}else{
+			pou.pos_x=robots[i].pos_x;
+			pou.pos_y=robots[i].pos_y;
+			pou.direction=robots[i].direction;
 		}
-		printf("robot's x-axis pos sent\n");
-		//setting up local robot parmas
-		pou.pos_x=choice;
-		
-		//*******
-		printf("Please enter robot's y-axis pos\n");
-		do{
-			printf("Enter a value from 0 to %d :",mars.nb_rows);
-			scanf("%d",&choice);
-		}while(!(choice>=0 & choice<mars.nb_rows));
-		
-		sprintf(msg,"%d",choice);
-		bd = sendto(s,msg,lg,0,padin,sizeof(*padin));
-		if(bd == -1)
-		{
-			printf("Erreur send \n");
-			exit(-1);
-		}
-		printf("robot's y-axis pos sent\n");
-		//setting up local robot parmas
-		pou.pos_y=choice;
-		
-		//*******
-		printf("Please enter robot's direction\n");
-		do{
-			printf("Enter the robot's direction 'N', 'S', 'E' or 'W' ");
-			scanf("%s",&dir);
-		}while(!(dir=='N'||dir=='S'||dir=='E'||dir=='W'));
-				
-		bd = sendto(s,&dir,1,0,padin,sizeof(*padin));
-		if(bd == -1)
-		{
-			printf("Erreur send \n");
-			exit(-1);
-		}
-		printf("robot's direction sent\n");
-		//setting up local robot parmas
-		pou.direction=find_direction(dir);
-		
+			
 		//*******
 		printf("Please enter robot's command\n");
 		do{
@@ -264,7 +290,7 @@ void setRobotParams(int s,char* msg, int lg,const struct sockaddr* padin,robot* 
 			scanf("%100s",pou.commande);
 		}while(!(commandValid(pou.commande)));
 				
-		bd = sendto(s,pou.commande,100,0,padin,sizeof(*padin));
+		int bd = sendto(s,pou.commande,100,0,padin,sizeof(*padin));
 		if(bd == -1)
 		{
 			printf("Erreur send \n");
@@ -280,26 +306,12 @@ void setRobotParams(int s,char* msg, int lg,const struct sockaddr* padin,robot* 
 	//int bd= recvfrom(s, msg, lg, 0, (struct sockaddr *)padin, p_lgexp1);
 	//printf("%s",msg);
 }
-/*
-void moveRobotsServer (char* msg, int s, int lg, struct sockaddr * p_exp, robot* robots, mars_map* mars, pthread_mutex_t* dmutex, pthread_cond_t*  condition){
-	int flag=1;
-        int i=0;
-        while(flag>=1||i<mars->nb_robots){
-            flag=0;
-            flag+=move_robot(mars,&robots[i]);
-            sprintf(msg,"%d %d %d %c",i,robots[i].pos_x,robots[i].pos_y,print_direction(robots[i].direction));
-            printf("%s\n",msg);
-            int bd = sendto(s, msg, strlen(msg), 0, p_exp, sizeof(struct sockaddr_in));
-            if (flag==0)
-                i++;
-            display_map(*mars);
-            for(int32_t i=0; i<0xFFFFFFF;i++);//delay
-        }
-        //inform the client that that the robots' movement are fully executed
-        char stop='q';
-        int bd = sendto(s, &stop, 1, 0, p_exp, sizeof(struct sockaddr_in));
-}*/
 
+/*
+* @brief: this function allows the server to move the robot's concurrently locally
+	  and stream the new locations to the client 
+*/
+int workToDoS =0; // display_map has no work to do
 void moveRobotServer (serverSocket* sock, robot* robots, mars_map* mars, pthread_mutex_t* dmutex, pthread_cond_t*  condition){
 	pthread_t display;
         thread_data display_data;
@@ -320,12 +332,19 @@ void moveRobotServer (serverSocket* sock, robot* robots, mars_map* mars, pthread
             pthread_create(&robot_threads[i],NULL,move_robot_serv,(void *)&robot_data[i]);
         }
         pthread_join(display,NULL);
+        workToDoS=0;
         //inform the client that that the robots' movement are fully executed
         char stop='q';
         int bd = sendto(sock->s, &stop, 1, 0, (struct sockaddr *) sock->p_exp, sizeof(struct sockaddr_in));
 }
 
-int workToDoS =0; // display_map has no work to do
+/*
+* @brief: this function is a sister of move_robot_conc
+*	  with the addition of sending thr robot's position
+*	  at each step
+*/
+
+
 void *move_robot_serv(void *arg)
 {	
     	char msg[40];
@@ -382,6 +401,9 @@ void *display_map_serv(void *arg){
     }
 }
 
+/*
+* @brief: this function allows the client the follow the movement of the robots
+*/
 void followRobots(int s,char* msg, int lg,const struct sockaddr* padin,robot* robots, mars_map* mars){
 	int *p_lgexp1;
 	int robot_nb,posX,posY;
@@ -410,6 +432,9 @@ void followRobots(int s,char* msg, int lg,const struct sockaddr* padin,robot* ro
 	}
 }
 
+/*
+* @brief: this function allows us to check whether the command is valid
+*/
 int commandValid(char* command){
 	for (int i=0; i<strlen(command); i++){
 		if (!(command[i]=='L'||command[i]=='R'||command[i]=='B'||command[i]=='M'))
@@ -418,6 +443,10 @@ int commandValid(char* command){
 	return 1;
 }
 
+/*
+* @brief: this function is dedicated to sending the current time from the client
+*	  to the server to synchronize both their random function
+*/
 void synchronize(int s,char* msg, int lg,const struct sockaddr* padin){
 	long now;
 	time(&now);
@@ -432,6 +461,9 @@ void synchronize(int s,char* msg, int lg,const struct sockaddr* padin){
 	printf("Server and Client synchronized\n");
 }
 
+/*
+* @brief: this function synchronises the server
+*/
 void waitForSync(char* message, int s, int lg, struct sockaddr * p_exp){
 	socklen_t p_lgexp = sizeof(struct sockaddr_in);
 	int bd = recvfrom(s,message,lg,0,p_exp, &p_lgexp);
